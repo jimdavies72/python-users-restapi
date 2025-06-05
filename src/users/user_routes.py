@@ -43,3 +43,12 @@ def get_user(email):
     if user:
         return jsonify(serialize_user(user)), 200
     return jsonify({"error": "User not found"}), 404
+
+@users_blueprint.route('/<email>', methods=['PUT'])
+def update_user(email):
+    data = request.get_json()
+    db = current_app.config["db"]
+    result = db["users"].update_one({"email": email}, {"$set": data})
+    if result.modified_count > 0:
+        return jsonify({"message": "User updated successfully"}), 200
+    return jsonify({"error": "User not found"}), 404
