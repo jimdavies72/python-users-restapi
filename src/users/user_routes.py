@@ -35,3 +35,11 @@ def get_users():
     users_cursor = db["users"].find()
     users = [serialize_user(u) for u in users_cursor]
     return jsonify(users), 200
+
+@users_blueprint.route('/<email>', methods=['GET'])
+def get_user(email):
+    db = current_app.config["db"]
+    user = db["users"].find_one({"email": email})
+    if user:
+        return jsonify(serialize_user(user)), 200
+    return jsonify({"error": "User not found"}), 404
