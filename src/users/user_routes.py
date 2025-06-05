@@ -52,3 +52,11 @@ def update_user(email):
     if result.modified_count > 0:
         return jsonify({"message": "User updated successfully"}), 200
     return jsonify({"error": "User not found"}), 404
+
+@users_blueprint.route('/<email>', methods=['DELETE'])
+def delete_user(email):
+    db = current_app.config["db"]
+    result = db["users"].delete_one({"email": email})
+    if result.deleted_count > 0:
+        return jsonify({"message": "User deleted successfully"}), 200
+    return jsonify({"error": "User not found"}), 404
