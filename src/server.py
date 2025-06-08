@@ -12,12 +12,12 @@ app = Flask(__name__)
 
 # Connect to MongoDB and attach the db handle to the app
 client = connect_to_db()
-#app.db = client[os.getenv("MONGO_DB")]
 app.config["db"] = client[os.getenv("MONGO_DB")]
 
-# Register the blueprint
+# Register the blueprints
 app.register_blueprint(users_blueprint, url_prefix='/users')
 
+# Run the app
 if __name__ == '__main__':
     print(f"Server running on port {port}")
     app.run(debug=True, port=port)
