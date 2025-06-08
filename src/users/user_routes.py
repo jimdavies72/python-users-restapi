@@ -4,6 +4,8 @@ from users.user_model import UserModel
 from pydantic import ValidationError
 from bson import ObjectId
 
+import requests
+
 users_blueprint = Blueprint('users_blueprint', __name__)
 
 def serialize_user(user_doc):
@@ -60,3 +62,44 @@ def delete_user(email):
     if result.deleted_count > 0:
         return jsonify({"message": "User deleted successfully"}), 200
     return jsonify({"error": "User not found"}), 404
+
+@users_blueprint.route('/delete_all', methods=['DELETE'])
+def delete_all_user():
+    # WARNING: DELETES ALL USERS
+  
+    db = current_app.config["db"]
+    result = db["users"].delete_many({})
+    if result.deleted_count > 0:
+        return jsonify({"message": "Users deleted successfully"}), 200
+    return jsonify({"error": "Users not found"}), 404
+  
+@users_blueprint.route('/from_api', methods=['POST'])
+def create_user_from_api():
+    try:
+      # extract [get] data from 3rd party api
+      response = requests.get('https://jsonplaceholder.typicode.com/users')
+      response.raise_for_status() # raise exception if request failure
+      data = response.json()
+      
+      # transform response to correct data schema
+      transformed = [
+        {
+          "name": user["name"],
+          "email": user["email"],
+          "password": user["username"]
+        }
+        for user in data
+      ]
+      
+      # load data into db
+      collection = current_app.config["db"]["users"]
+      collection.insert_many(transformed)
+      return jsonify({
+        "message": "Users created successfully",
+        "count": len(transformed)
+      }), 201
+      
+    except requests.RequestException as e:
+      return jsonify({"error": f"Failed to fetch data: {str(e)}"}), 404
+    except Exception as e:
+      return jsonify({"error": f"Something went wrong: {str(e)}"}), 500
